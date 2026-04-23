@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Parisienne&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -61,12 +61,21 @@
   }
 
   .line-4 {
-    /* Same font family (Playfair Display, inherited from .title), same weight, same letter-spacing as OPDP. Only point size differs. */
-    font-family: 'Playfair Display', Georgia, serif;
+    /* Elegant script face for the brand name */
+    font-family: 'Parisienne', 'Playfair Display', cursive, serif;
     font-size: clamp(1.8rem, 4.5vw, 3.3rem);
-    font-weight: 900;
-    letter-spacing: 0.04em;
+    font-weight: 400;
+    letter-spacing: 0.01em;
     font-style: normal;
+  }
+  .line-4 .tm-mark {
+    /* Use a serif for the ™ glyph so it renders cleanly */
+    font-family: 'Playfair Display', serif;
+    font-size: 0.4em;
+    vertical-align: super;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-left: 0.15em;
   }
 
   .letter {
@@ -159,7 +168,7 @@
     font-weight: 400;
     font-size: 1.4rem;
     letter-spacing: 0.05em;
-    margin-bottom: 22px;
+    margin-bottom: 44px;
     color: var(--fg);
   }
 
@@ -220,9 +229,9 @@
     left: 50%;
     top: 50%;
     font-family: 'Playfair Display', serif;
-    font-size: 0.55rem;
+    font-size: 0.72rem;
     color: var(--fg-dim);
-    transform-origin: 50% 72px;
+    transform-origin: 50% 78px;
     font-style: italic;
   }
   .dial-tick-label.eleven { color: #ff5533; font-weight: 700; font-style: normal; }
@@ -301,6 +310,48 @@
     font-family: inherit;
   }
 
+  /* ============ SUPPORT ANNOTATIONS ============ */
+  #supportSvg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 9997;
+  }
+  #supportSvg line {
+    stroke: #d9202c;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 3px rgba(217, 32, 44, 0.4));
+    animation: support-draw 0.45s ease-out both;
+  }
+  @keyframes support-draw {
+    from { stroke-dashoffset: 400; stroke-dasharray: 400; }
+    to   { stroke-dashoffset: 0; stroke-dasharray: 400; }
+  }
+  .support-box {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: #c8202b;
+    color: #fff;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    padding: 6px 12px;
+    z-index: 9998;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgba(200, 32, 43, 0.45);
+    animation: support-pop 0.35s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    white-space: nowrap;
+  }
+  @keyframes support-pop {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
   /* ============ STUDY DESIGN ============ */
   .study-wrap {
     max-width: 760px;
@@ -341,7 +392,7 @@
 
   footer {
     text-align: center;
-    margin-top: 80px;
+    margin-top: 220px;
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     font-size: 0.8rem;
@@ -352,6 +403,8 @@
 </style>
 </head>
 <body>
+
+<svg id="supportSvg" aria-hidden="true"></svg>
 
 <h1 class="title" id="title">
   <span class="title-line line-1" data-text="Properly Formatted">Properly Formatted</span>
@@ -369,6 +422,7 @@
 
   <div class="btn-row">
     <button class="btn btn-special" id="tealBtn">Make Something Teal</button>
+    <button class="btn btn-special" id="supportBtn">Needs More Support</button>
     <button class="btn btn-special" id="studyBtn">Add more Study Design</button>
   </div>
 </div>
@@ -407,6 +461,7 @@ function wrapLetters() {
       const span = document.createElement('span');
       span.className = 'letter';
       if (line.id === 'opdpLine') span.classList.add('opdp-letter');
+      if (ch === '™') span.classList.add('tm-mark');
       span.textContent = ch;
       if (ch === ' ') span.style.whiteSpace = 'pre';
       line.appendChild(span);
@@ -507,6 +562,7 @@ async function discoverMp3sFromGitHub() {
     if (!Array.isArray(items)) return null;
     return items
       .filter(it => it.type === 'file' && /\.mp3$/i.test(it.name))
+      .filter(it => it.name.toLowerCase() !== 'ding.mp3')
       .map(it => it.name);
   } catch (e) {
     return null;
@@ -523,7 +579,7 @@ async function discoverMp3sFromDirListing() {
     doc.querySelectorAll('a[href]').forEach(a => {
       const href = decodeURIComponent(a.getAttribute('href') || '');
       const name = href.split('/').pop().split('?')[0];
-      if (name && /\.mp3$/i.test(name)) found.add(name);
+      if (name && /\.mp3$/i.test(name) && name.toLowerCase() !== 'ding.mp3') found.add(name);
     });
     return Array.from(found);
   } catch (e) {
@@ -826,9 +882,9 @@ function buildDialTicks() {
     const lbl = document.createElement('div');
     lbl.className = 'dial-tick-label' + (i === 11 ? ' eleven' : '');
     lbl.textContent = i;
-    lbl.style.transform = 'rotate(' + angle + 'deg) translateY(-72px) rotate(' + (-angle) + 'deg)';
-    lbl.style.marginLeft = '-4px';
-    lbl.style.marginTop = '-5px';
+    lbl.style.transform = 'rotate(' + angle + 'deg) translateY(-78px) rotate(' + (-angle) + 'deg)';
+    lbl.style.marginLeft = (i >= 10 ? '-7px' : '-4px');
+    lbl.style.marginTop = '-7px';
     ticksWrap.appendChild(lbl);
   }
 }
@@ -860,13 +916,115 @@ function buildFlames() {
 }
 
 /* =======================================================
+   DING SOUND (for special buttons)
+   Drop ding.mp3 in the repo root. It is auto-excluded from
+   the soundboard button list above.
+   ======================================================= */
+const dingAudio = new Audio('ding.mp3');
+dingAudio.preload = 'auto';
+dingAudio.volume = 0.55;
+
+function playDing() {
+  try {
+    const d = dingAudio.cloneNode();
+    d.volume = dingAudio.volume;
+    d.play().catch(() => {});
+  } catch (e) {}
+}
+
+/* =======================================================
+   NEEDS MORE SUPPORT
+   Draws a 2px red line from a red "pXY" tag to a random
+   element on the page. Annotations stack with each click.
+   ======================================================= */
+const supportSvg = document.getElementById('supportSvg');
+
+function sizeSupportSvg() {
+  // SVG must match the full document size so absolute coords work
+  const d = document.documentElement;
+  const b = document.body;
+  const w = Math.max(d.scrollWidth, b.scrollWidth, d.clientWidth);
+  const h = Math.max(d.scrollHeight, b.scrollHeight, d.clientHeight);
+  supportSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  supportSvg.setAttribute('width', w);
+  supportSvg.setAttribute('height', h);
+}
+
+function randomSupportLabel() {
+  const x = Math.floor(Math.random() * 99) + 1;           // 1..99
+  const y = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A..Z
+  return 'p' + x + y;
+}
+
+function needsMoreSupport() {
+  const candidates = Array.from(document.body.querySelectorAll('*')).filter(el => {
+    if (el.closest('script, style')) return false;
+    if (el.id === 'supportSvg') return false;
+    if (el.closest('.support-box')) return false;
+    if (el.tagName === 'SVG' || el.tagName === 'LINE') return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 10 && r.height > 10
+      && r.bottom > 0 && r.top < window.innerHeight;
+  });
+  if (candidates.length === 0) return;
+  const target = candidates[Math.floor(Math.random() * candidates.length)];
+  const r = target.getBoundingClientRect();
+
+  // Convert to document-relative coords
+  const sx = window.scrollX;
+  const sy = window.scrollY;
+  const tx = r.left + sx + r.width / 2;
+  const ty = r.top + sy + r.height / 2;
+
+  // Place the red box 100–190px away at a random angle
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 100 + Math.random() * 90;
+  let bx = tx + Math.cos(angle) * dist;
+  let by = ty + Math.sin(angle) * dist;
+
+  // Keep the box inside the visible viewport (in doc coords)
+  const vLeft = sx + 70;
+  const vRight = sx + window.innerWidth - 70;
+  const vTop = sy + 30;
+  const vBottom = sy + window.innerHeight - 30;
+  bx = Math.max(vLeft, Math.min(vRight, bx));
+  by = Math.max(vTop, Math.min(vBottom, by));
+
+  // Make the box
+  const box = document.createElement('div');
+  box.className = 'support-box';
+  box.textContent = randomSupportLabel();
+  box.style.left = bx + 'px';
+  box.style.top = by + 'px';
+  document.body.appendChild(box);
+
+  // Draw the line (SVG)
+  sizeSupportSvg();
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', tx);
+  line.setAttribute('y1', ty);
+  line.setAttribute('x2', bx);
+  line.setAttribute('y2', by);
+  supportSvg.appendChild(line);
+}
+
+/* =======================================================
    BINDINGS + INIT
    ======================================================= */
 document.getElementById('tealBtn').addEventListener('click', () => {
+  playDing();
   makeSomethingTeal();
   registerButtonPress();
 });
-document.getElementById('studyBtn').addEventListener('click', onStudyClick);
+document.getElementById('supportBtn').addEventListener('click', () => {
+  playDing();
+  needsMoreSupport();
+  registerButtonPress();
+});
+document.getElementById('studyBtn').addEventListener('click', (e) => {
+  playDing();
+  onStudyClick(e);
+});
 
 function init() {
   wrapLetters();
@@ -880,6 +1038,7 @@ function init() {
     // Debounced-ish re-equalize
     clearTimeout(window.__eqT);
     window.__eqT = setTimeout(equalizeLines, 120);
+    sizeSupportSvg();
   });
 
   buildDialTicks();
@@ -887,6 +1046,7 @@ function init() {
   updateDialVisual();
 
   createMp3Buttons();
+  sizeSupportSvg();
 
   // Scramble every 3 seconds
   setInterval(scrambleOPDP, 3000);
