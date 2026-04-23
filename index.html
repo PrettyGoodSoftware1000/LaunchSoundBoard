@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Parisienne&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -55,22 +55,21 @@
   }
 
   .line-2 {
+    font-family: 'Century Schoolbook', 'New Century Schoolbook', 'ITC Century', Century, Georgia, serif;
     font-size: clamp(4rem, 13vw, 9rem);
     font-weight: 900;
     letter-spacing: 0.04em;
   }
 
   .line-4 {
-    /* Elegant script face for the brand name */
-    font-family: 'Parisienne', 'Playfair Display', cursive, serif;
+    /* Century family, matching OPDP, just at a smaller point size */
+    font-family: 'Century Schoolbook', 'New Century Schoolbook', 'ITC Century', Century, Georgia, serif;
     font-size: clamp(1.8rem, 4.5vw, 3.3rem);
-    font-weight: 400;
-    letter-spacing: 0.01em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     font-style: normal;
   }
   .line-4 .tm-mark {
-    /* Use a serif for the ™ glyph so it renders cleanly */
-    font-family: 'Playfair Display', serif;
     font-size: 0.4em;
     vertical-align: super;
     font-weight: 700;
@@ -216,22 +215,16 @@
     pointer-events: none;
   }
   .dial-tick {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 1px;
-    height: 3px;
-    background: var(--fg-dim);
-    transform-origin: 50% 61px;
+    display: none;
   }
   .dial-tick-label {
     position: absolute;
     left: 50%;
     top: 50%;
     font-family: 'Playfair Display', serif;
-    font-size: 0.72rem;
+    font-size: 0.95rem;
     color: var(--fg-dim);
-    transform-origin: 50% 78px;
+    transform-origin: 50% 82px;
     font-style: italic;
   }
   .dial-tick-label.eleven { color: #ff5533; font-weight: 700; font-style: normal; }
@@ -366,28 +359,26 @@
     letter-spacing: 0.35em;
     text-transform: uppercase;
     color: var(--fg-dim);
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     display: none;
   }
   .study-heading.visible { display: block; }
 
-  #studyDesignOutput p {
+  #studyDesignOutput {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.2rem;
     line-height: 1.75;
-    font-style: italic;
-    margin-bottom: 14px;
-    text-align: center;
-    color: var(--fg);
+    color: #ffffff;
+    text-align: justify;
+    hyphens: auto;
+  }
+  .study-sentence {
     opacity: 0;
-    animation: fadeIn 0.6s ease forwards;
+    animation: studyFadeIn 0.7s ease forwards;
   }
-  #studyDesignOutput p:nth-child(even) {
-    color: var(--fg-dim);
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+  @keyframes studyFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 
   footer {
@@ -427,6 +418,11 @@
   </div>
 </div>
 
+<div class="study-wrap">
+  <div class="study-heading" id="studyHeading">Study Design</div>
+  <div id="studyDesignOutput"></div>
+</div>
+
 <div class="dial-section">
   <div class="dial-label">Sense of Urgency</div>
   <div class="dial-wrap">
@@ -438,12 +434,6 @@
       </div>
     </div>
   </div>
-  <div class="dial-value" id="dialValue">0</div>
-</div>
-
-<div class="study-wrap">
-  <div class="study-heading" id="studyHeading">Study Design</div>
-  <div id="studyDesignOutput"></div>
 </div>
 
 <footer>Ask Your Doctor</footer>
@@ -776,18 +766,32 @@ async function onStudyClick() {
   }
   const out = document.getElementById('studyDesignOutput');
   const heading = document.getElementById('studyHeading');
-  const p = document.createElement('p');
+  heading.classList.add('visible');
+
+  // Ensure there's a single flowing paragraph we keep appending to
+  let para = out.querySelector('p.study-paragraph');
+  if (!para) {
+    para = document.createElement('p');
+    para.className = 'study-paragraph';
+    out.appendChild(para);
+  }
+
+  const span = document.createElement('span');
+  span.className = 'study-sentence';
+
   if (studyLoadFailed || !studySentences || studySentences.length === 0) {
-    p.textContent = '(Could not read StudyDesign.txt — place it next to index.html.)';
-    p.style.color = 'var(--fg-dim)';
+    span.textContent = '(Could not read StudyDesign.txt — place it next to index.html.) ';
+    span.style.color = 'var(--fg-dim)';
   } else {
-    p.textContent = studySentences[studyIndex % studySentences.length];
+    const text = studySentences[studyIndex % studySentences.length];
+    // Space between sentences so they flow as prose
+    span.textContent = (para.childNodes.length > 0 ? ' ' : '') + text;
     studyIndex++;
   }
-  heading.classList.add('visible');
-  out.appendChild(p);
-  p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  para.appendChild(span);
   registerButtonPress();
+  // No scrollIntoView: the page should NOT auto-scroll on click.
 }
 
 /* =======================================================
@@ -796,7 +800,6 @@ async function onStudyClick() {
    At 11 → flames.
    ======================================================= */
 const dial = document.getElementById('dial');
-const dialValueEl = document.getElementById('dialValue');
 const flamesEl = document.getElementById('flames');
 const dialShakeEl = document.getElementById('dialShake');
 const MAX_ANGLE = 330; // 0 → 330° maps to 0 → 11
@@ -821,7 +824,6 @@ function updateDialVisual() {
   dial.style.transform = 'rotate(' + currentAngle + 'deg)';
   const val = Math.round((currentAngle / MAX_ANGLE) * 11);
   const clamped = Math.max(0, Math.min(11, val));
-  dialValueEl.textContent = clamped;
   if (clamped >= 11) {
     flamesEl.classList.add('active');
     dial.classList.add('on-fire');
@@ -869,22 +871,17 @@ dial.addEventListener('touchstart', startDrag, { passive: false });
 window.addEventListener('touchmove', moveDrag, { passive: false });
 window.addEventListener('touchend', endDrag);
 
-/* Dial tick marks and numeric labels (0..11) */
+/* Dial numeric labels (0..11) — tick marks removed */
 function buildDialTicks() {
   const ticksWrap = document.getElementById('dialTicks');
   for (let i = 0; i <= 11; i++) {
     const angle = (i / 11) * MAX_ANGLE;
-    const tick = document.createElement('div');
-    tick.className = 'dial-tick';
-    tick.style.transform = 'rotate(' + angle + 'deg) translateY(-61px)';
-    ticksWrap.appendChild(tick);
-
     const lbl = document.createElement('div');
     lbl.className = 'dial-tick-label' + (i === 11 ? ' eleven' : '');
     lbl.textContent = i;
-    lbl.style.transform = 'rotate(' + angle + 'deg) translateY(-78px) rotate(' + (-angle) + 'deg)';
-    lbl.style.marginLeft = (i >= 10 ? '-7px' : '-4px');
-    lbl.style.marginTop = '-7px';
+    lbl.style.transform = 'rotate(' + angle + 'deg) translateY(-82px) rotate(' + (-angle) + 'deg)';
+    lbl.style.marginLeft = (i >= 10 ? '-9px' : '-5px');
+    lbl.style.marginTop = '-9px';
     ticksWrap.appendChild(lbl);
   }
 }
