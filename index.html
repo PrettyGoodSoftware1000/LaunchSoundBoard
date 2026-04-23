@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Properly Formatted OPDP Launch Sound Board for TRADEMARK™</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #000000;
+    --fg: #f0ebe3;
+    --fg-dim: rgba(240, 235, 227, 0.55);
+    --line: rgba(240, 235, 227, 0.25);
+    --teal: #00e5d1;
+  }
+
+  html, body { background: var(--bg); }
+
+  body {
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% -10%, #0d0d0d 0%, #000 70%);
+    color: var(--fg);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 400;
+    padding: 60px 24px 120px;
+    overflow-x: hidden;
+  }
+
+  /* ============ TITLE ============ */
+  .title {
+    text-align: center;
+    margin: 0 auto 70px;
+    font-family: 'Playfair Display', Georgia, serif;
+    line-height: 1.0;
+    max-width: 1100px;
+  }
+
+  .title-line {
+    display: block;
+    white-space: nowrap;
+    margin: 0 auto;
+    padding: 4px 0;
+    font-weight: 700;
+  }
+
+  .line-1, .line-3 {
+    font-size: clamp(1.4rem, 3.5vw, 2.6rem);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  .line-2 {
+    font-size: clamp(4rem, 13vw, 9rem);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+  }
+
+  .line-4 {
+    /* Same font family (Playfair Display, inherited from .title), same weight, same letter-spacing as OPDP. Only point size differs. */
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.8rem, 4.5vw, 3.3rem);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    font-style: normal;
+  }
+
+  .letter {
+    display: inline-block;
+    position: relative;
+    will-change: transform, opacity;
+  }
+
+  /* ============ ORNAMENT ============ */
+  .ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 38px auto 30px;
+    color: var(--fg-dim);
+    letter-spacing: 0.3em;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .ornament::before,
+  .ornament::after {
+    content: '';
+    width: 80px;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ============ SOUND BOARD ============ */
+  .soundboard {
+    max-width: 920px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto 20px;
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.78rem;
+    font-weight: 400;
+    padding: 13px 22px;
+    cursor: pointer;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.15s ease;
+    position: relative;
+  }
+  .btn:hover {
+    background: var(--fg);
+    color: #000;
+    border-color: var(--fg);
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn-special {
+    border-style: dashed;
+    font-style: italic;
+  }
+
+  .empty-note {
+    color: var(--fg-dim);
+    font-style: italic;
+    font-size: 1rem;
+    padding: 24px;
+  }
+
+  /* ============ DIAL ============ */
+  .dial-section {
+    margin: 90px auto 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .dial-label {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 22px;
+    color: var(--fg);
+  }
+
+  .dial-wrap {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+  }
+
+  .dial {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, #3a3a3a 0%, #1a1a1a 45%, #050505 100%);
+    border: 1px solid var(--line);
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    box-shadow:
+      inset 0 1px 4px rgba(255,255,255,0.08),
+      inset 0 -2px 6px rgba(0,0,0,0.6),
+      0 3px 12px rgba(0,0,0,0.8);
+    z-index: 2;
+    transition: box-shadow 0.4s ease;
+  }
+  .dial:active { cursor: grabbing; }
+
+  .dial-indicator {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 17px;
+    background: var(--fg);
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(240, 235, 227, 0.4);
+  }
+
+  .dial-ticks {
+    position: absolute;
+    inset: -11px;
+    pointer-events: none;
+  }
+  .dial-tick {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1px;
+    height: 3px;
+    background: var(--fg-dim);
+    transform-origin: 50% 61px;
+  }
+  .dial-tick-label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.55rem;
+    color: var(--fg-dim);
+    transform-origin: 50% 72px;
+    font-style: italic;
+  }
+  .dial-tick-label.eleven { color: #ff5533; font-weight: 700; font-style: normal; }
+
+  .dial-value {
+    margin-top: 20px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+  }
+
+  /* ============ FLAMES ============ */
+  .flames {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 100px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 3;
+  }
+  .flames.active { opacity: 1; }
+
+  .flame {
+    position: absolute;
+    bottom: 0;
+    border-radius: 50% 50% 30% 30%;
+    transform-origin: 50% 100%;
+    filter: blur(1.5px);
+    mix-blend-mode: screen;
+  }
+
+  @keyframes flicker {
+    0%   { transform: translateX(0) translateY(0) scaleY(1) scaleX(1); opacity: 0.9; }
+    25%  { transform: translateX(-3px) translateY(-8px) scaleY(1.15) scaleX(0.9); opacity: 1; }
+    50%  { transform: translateX(2px) translateY(-14px) scaleY(1.3) scaleX(0.8); opacity: 0.85; }
+    75%  { transform: translateX(-2px) translateY(-6px) scaleY(1.1) scaleX(0.95); opacity: 1; }
+    100% { transform: translateX(0) translateY(0) scaleY(1) scaleX(1); opacity: 0.9; }
+  }
+
+  /* Shake wrapper — vibrates faster as dial value rises */
+  .dial-shake {
+    position: absolute;
+    inset: 0;
+    animation: dial-shake var(--shake-dur, 0.5s) linear infinite;
+  }
+  .dial-shake.still { animation: none; }
+
+  @keyframes dial-shake {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(-1.4px, 0.6px); }
+    40%  { transform: translate(1.2px, -1.1px); }
+    60%  { transform: translate(-0.7px, 1.4px); }
+    80%  { transform: translate(1.1px, 0.9px); }
+    100% { transform: translate(0, 0); }
+  }
+
+  .dial.on-fire {
+    box-shadow:
+      inset 0 1px 4px rgba(255,120,0,0.3),
+      inset 0 -2px 6px rgba(0,0,0,0.6),
+      0 0 20px rgba(255, 80, 0, 0.7),
+      0 0 40px rgba(255, 40, 0, 0.4);
+  }
+
+  /* ============ FALLING LETTERS ============ */
+  .falling {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    line-height: 1;
+    font-family: inherit;
+  }
+
+  /* ============ STUDY DESIGN ============ */
+  .study-wrap {
+    max-width: 760px;
+    margin: 70px auto 0;
+    padding: 0 12px;
+  }
+  .study-heading {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    margin-bottom: 20px;
+    display: none;
+  }
+  .study-heading.visible { display: block; }
+
+  #studyDesignOutput p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    line-height: 1.75;
+    font-style: italic;
+    margin-bottom: 14px;
+    text-align: center;
+    color: var(--fg);
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards;
+  }
+  #studyDesignOutput p:nth-child(even) {
+    color: var(--fg-dim);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 80px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--fg-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="title" id="title">
+  <span class="title-line line-1" data-text="Properly Formatted">Properly Formatted</span>
+  <span class="title-line line-2" id="opdpLine" data-text="OPDP">OPDP</span>
+  <span class="title-line line-3" data-text="Launch Sound Board for">Launch Sound Board for</span>
+  <span class="title-line line-4" data-text="TRADEMARK™">TRADEMARK™</span>
+</h1>
+
+<div class="ornament">* &dagger; &Dagger; &dagger; *</div>
+
+<div class="soundboard">
+  <div class="btn-row" id="mp3Buttons"></div>
+
+  <div class="ornament">* &dagger; &Dagger; &dagger; *</div>
+
+  <div class="btn-row">
+    <button class="btn btn-special" id="tealBtn">Make Something Teal</button>
+    <button class="btn btn-special" id="studyBtn">Add more Study Design</button>
+  </div>
+</div>
+
+<div class="dial-section">
+  <div class="dial-label">Sense of Urgency</div>
+  <div class="dial-wrap">
+    <div class="dial-ticks" id="dialTicks"></div>
+    <div class="dial-shake still" id="dialShake">
+      <div class="flames" id="flames"></div>
+      <div class="dial" id="dial">
+        <div class="dial-indicator"></div>
+      </div>
+    </div>
+  </div>
+  <div class="dial-value" id="dialValue">0</div>
+</div>
+
+<div class="study-wrap">
+  <div class="study-heading" id="studyHeading">Study Design</div>
+  <div id="studyDesignOutput"></div>
+</div>
+
+<footer>Ask Your Doctor</footer>
+
+<script>
+/* =======================================================
+   TITLE: wrap each character in a span so we can scramble
+   and make letters fall individually.
+   ======================================================= */
+function wrapLetters() {
+  document.querySelectorAll('.title-line').forEach(line => {
+    const text = line.dataset.text;
+    line.innerHTML = '';
+    for (const ch of text) {
+      const span = document.createElement('span');
+      span.className = 'letter';
+      if (line.id === 'opdpLine') span.classList.add('opdp-letter');
+      span.textContent = ch;
+      if (ch === ' ') span.style.whiteSpace = 'pre';
+      line.appendChild(span);
+    }
+  });
+}
+
+/* =======================================================
+   EQUALIZE TITLE LINE WIDTHS via letter-spacing.
+   Each line's width is stretched to match the widest.
+   ======================================================= */
+function equalizeLines() {
+  const lines = Array.from(document.querySelectorAll('.title-line'));
+  lines.forEach(l => l.style.letterSpacing = '');
+  // Need at least one layout pass before measuring
+  const widths = lines.map(l => l.getBoundingClientRect().width);
+  const maxWidth = Math.max(...widths);
+  lines.forEach((l, i) => {
+    const n = l.dataset.text.length;
+    if (n > 1 && widths[i] < maxWidth) {
+      const extra = (maxWidth - widths[i]) / n;
+      // Combine with existing base letter-spacing from CSS by using em-to-px
+      const base = parseFloat(getComputedStyle(l).letterSpacing) || 0;
+      l.style.letterSpacing = (base + extra) + 'px';
+    }
+  });
+}
+
+/* =======================================================
+   SCRAMBLE OPDP every 3 seconds.
+   ======================================================= */
+function scrambleOPDP() {
+  const opdp = document.getElementById('opdpLine');
+  const letters = Array.from(opdp.children);
+  if (letters.length < 2) return;
+  // Fisher-Yates
+  const order = letters.slice();
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  // Re-append in new order (this moves existing nodes, preserving any state)
+  order.forEach(el => opdp.appendChild(el));
+}
+
+/* =======================================================
+   MP3 BUTTON GENERATION
+   Tries to discover .mp3 files in the current directory by
+   fetching the directory index (works with most local HTTP
+   servers like `python3 -m http.server`). Falls back to a
+   user-editable list if auto-discovery fails.
+   ======================================================= */
+
+// If auto-discovery fails, list your MP3 filenames here:
+const FALLBACK_MP3S = [
+  // 'Sad_Crying.mp3',
+  // 'Victory_Horn.mp3',
+  // 'Corporate_Applause.mp3',
+];
+
+async function discoverMp3s() {
+  try {
+    const resp = await fetch('./', { headers: { 'Accept': 'text/html' } });
+    if (!resp.ok) throw new Error('dir listing not available');
+    const html = await resp.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const found = new Set();
+    doc.querySelectorAll('a[href]').forEach(a => {
+      const href = decodeURIComponent(a.getAttribute('href') || '');
+      const name = href.split('/').pop().split('?')[0];
+      if (name && /\.mp3$/i.test(name)) found.add(name);
+    });
+    return Array.from(found);
+  } catch (e) {
+    return [];
+  }
+}
+
+function filenameToLabel(fn) {
+  return fn.replace(/\.mp3$/i, '').replace(/[_\-]+/g, ' ').trim();
+}
+
+async function createMp3Buttons() {
+  const container = document.getElementById('mp3Buttons');
+  let mp3s = await discoverMp3s();
+  if (mp3s.length === 0) mp3s = FALLBACK_MP3S;
+
+  if (mp3s.length === 0) {
+    container.innerHTML =
+      '<div class="empty-note">' +
+      'No <em>.mp3</em> files detected. Serve this page with a local HTTP server ' +
+      '(<code style="font-family:monospace;">python3 -m http.server</code>) ' +
+      'and place MP3s alongside <em>index.html</em>, or add filenames to ' +
+      '<code style="font-family:monospace;">FALLBACK_MP3S</code> in the script.' +
+      '</div>';
+    return;
+  }
+
+  mp3s.sort((a, b) => a.localeCompare(b));
+  mp3s.forEach(fn => {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = filenameToLabel(fn);
+    const audio = new Audio(fn);
+    audio.preload = 'none';
+    btn.addEventListener('click', () => {
+      try {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } catch (e) {}
+      registerButtonPress();
+    });
+    container.appendChild(btn);
+  });
+}
+
+/* =======================================================
+   MAKE SOMETHING TEAL
+   Picks a random visible element and colors it teal.
+   ======================================================= */
+function makeSomethingTeal() {
+  const candidates = Array.from(document.body.querySelectorAll('*')).filter(el => {
+    if (el.closest('script, style')) return false;
+    if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  });
+  if (candidates.length === 0) return;
+  const el = candidates[Math.floor(Math.random() * candidates.length)];
+  const modes = ['color', 'background', 'border', 'shadow'];
+  const mode = modes[Math.floor(Math.random() * modes.length)];
+  switch (mode) {
+    case 'color':
+      el.style.color = 'var(--teal)';
+      break;
+    case 'background':
+      el.style.backgroundColor = 'var(--teal)';
+      el.style.color = '#001';
+      break;
+    case 'border':
+      el.style.borderColor = 'var(--teal)';
+      el.style.borderStyle = el.style.borderStyle || 'solid';
+      el.style.borderWidth = '2px';
+      break;
+    case 'shadow':
+      el.style.textShadow = '0 0 16px var(--teal)';
+      el.style.boxShadow = '0 0 24px var(--teal)';
+      break;
+  }
+}
+
+/* =======================================================
+   FALLING LETTERS
+   Every 1–5 button presses, pick a random still-present
+   title letter and make it fall away.
+   ======================================================= */
+let pressCount = 0;
+let nextFallAt = randBetween(1, 5);
+
+function randBetween(a, b) {
+  return Math.floor(Math.random() * (b - a + 1)) + a;
+}
+
+function registerButtonPress() {
+  pressCount++;
+  if (pressCount >= nextFallAt) {
+    fallTitleLetter();
+    pressCount = 0;
+    nextFallAt = randBetween(1, 5);
+  }
+}
+
+function fallTitleLetter() {
+  const available = Array.from(document.querySelectorAll('.title .letter'))
+    .filter(l => l.textContent.trim() !== '' && !l.dataset.falling);
+  if (available.length === 0) return;
+
+  const letter = available[Math.floor(Math.random() * available.length)];
+  letter.dataset.falling = '1';
+
+  const rect = letter.getBoundingClientRect();
+  const style = getComputedStyle(letter);
+
+  const clone = document.createElement('span');
+  clone.className = 'falling';
+  clone.textContent = letter.textContent;
+  clone.style.left = rect.left + 'px';
+  clone.style.top = rect.top + 'px';
+  clone.style.fontSize = style.fontSize;
+  clone.style.fontWeight = style.fontWeight;
+  clone.style.fontStyle = style.fontStyle;
+  clone.style.fontFamily = style.fontFamily;
+  clone.style.color = style.color;
+  clone.style.letterSpacing = '0';
+  document.body.appendChild(clone);
+
+  // Hide original so the title has a visible gap where it was
+  letter.style.visibility = 'hidden';
+
+  const startT = performance.now();
+  const duration = 1800 + Math.random() * 900;
+  const startX = rect.left;
+  const startY = rect.top;
+  const endY = window.innerHeight + 60;
+  const drift = (Math.random() - 0.5) * 240;
+  const totalRot = (Math.random() - 0.5) * 900;
+
+  function step(now) {
+    const t = Math.min(1, (now - startT) / duration);
+    const ease = t * t; // accelerate like gravity
+    const y = startY + (endY - startY) * ease;
+    const x = startX + drift * t;
+    const rot = totalRot * t;
+    const op = t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
+    clone.style.left = x + 'px';
+    clone.style.top = y + 'px';
+    clone.style.transform = 'rotate(' + rot + 'deg)';
+    clone.style.opacity = op;
+    if (t < 1) requestAnimationFrame(step);
+    else clone.remove();
+  }
+  requestAnimationFrame(step);
+}
+
+/* =======================================================
+   STUDY DESIGN
+   Reads StudyDesign.txt, splits into sentences, adds one
+   per click.
+   ======================================================= */
+let studySentences = null;
+let studyIndex = 0;
+let studyLoadFailed = false;
+
+async function loadStudyDesign() {
+  try {
+    const resp = await fetch('StudyDesign.txt');
+    if (!resp.ok) throw new Error('not found');
+    const text = await resp.text();
+    // Split into sentences on . ! ?  (keeping the terminator),
+    // fallback to line splits if no terminators.
+    let sentences = text.match(/[^.!?\n]+[.!?]+(?:["')\]]?)/g);
+    if (!sentences || sentences.length === 0) {
+      sentences = text.split(/\n+/);
+    }
+    sentences = sentences.map(s => s.trim()).filter(Boolean);
+    return sentences;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function onStudyClick() {
+  if (studySentences === null && !studyLoadFailed) {
+    studySentences = await loadStudyDesign();
+    if (!studySentences) studyLoadFailed = true;
+  }
+  const out = document.getElementById('studyDesignOutput');
+  const heading = document.getElementById('studyHeading');
+  const p = document.createElement('p');
+  if (studyLoadFailed || !studySentences || studySentences.length === 0) {
+    p.textContent = '(Could not read StudyDesign.txt — place it next to index.html.)';
+    p.style.color = 'var(--fg-dim)';
+  } else {
+    p.textContent = studySentences[studyIndex % studySentences.length];
+    studyIndex++;
+  }
+  heading.classList.add('visible');
+  out.appendChild(p);
+  p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  registerButtonPress();
+}
+
+/* =======================================================
+   DIAL (Sense of Urgency)
+   Click-and-drag to rotate. Goes from 0 to 11.
+   At 11 → flames.
+   ======================================================= */
+const dial = document.getElementById('dial');
+const dialValueEl = document.getElementById('dialValue');
+const flamesEl = document.getElementById('flames');
+const dialShakeEl = document.getElementById('dialShake');
+const MAX_ANGLE = 330; // 0 → 330° maps to 0 → 11
+
+let currentAngle = 0;
+let dragging = false;
+let lastPointerAngle = 0;
+let dialCenter = { x: 0, y: 0 };
+
+function pointerAngle(e) {
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+  const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+  const dx = cx - dialCenter.x;
+  const dy = cy - dialCenter.y;
+  // 0° = up (12 o'clock), increasing clockwise
+  let deg = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+  if (deg < 0) deg += 360;
+  return deg;
+}
+
+function updateDialVisual() {
+  dial.style.transform = 'rotate(' + currentAngle + 'deg)';
+  const val = Math.round((currentAngle / MAX_ANGLE) * 11);
+  const clamped = Math.max(0, Math.min(11, val));
+  dialValueEl.textContent = clamped;
+  if (clamped >= 11) {
+    flamesEl.classList.add('active');
+    dial.classList.add('on-fire');
+  } else {
+    flamesEl.classList.remove('active');
+    dial.classList.remove('on-fire');
+  }
+  // Vibration: faster the further turned. 0 = still, 11 = frenetic.
+  if (clamped === 0) {
+    dialShakeEl.classList.add('still');
+  } else {
+    dialShakeEl.classList.remove('still');
+    // Map 1..11 to ~0.55s..~0.05s duration
+    const dur = Math.max(0.05, 0.6 - clamped * 0.05);
+    dialShakeEl.style.setProperty('--shake-dur', dur + 's');
+  }
+}
+
+function startDrag(e) {
+  dragging = true;
+  const rect = dial.getBoundingClientRect();
+  dialCenter.x = rect.left + rect.width / 2;
+  dialCenter.y = rect.top + rect.height / 2;
+  lastPointerAngle = pointerAngle(e);
+  e.preventDefault();
+}
+
+function moveDrag(e) {
+  if (!dragging) return;
+  const a = pointerAngle(e);
+  let delta = a - lastPointerAngle;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+  currentAngle = Math.max(0, Math.min(MAX_ANGLE, currentAngle + delta));
+  lastPointerAngle = a;
+  updateDialVisual();
+}
+
+function endDrag() { dragging = false; }
+
+dial.addEventListener('mousedown', startDrag);
+window.addEventListener('mousemove', moveDrag);
+window.addEventListener('mouseup', endDrag);
+dial.addEventListener('touchstart', startDrag, { passive: false });
+window.addEventListener('touchmove', moveDrag, { passive: false });
+window.addEventListener('touchend', endDrag);
+
+/* Dial tick marks and numeric labels (0..11) */
+function buildDialTicks() {
+  const ticksWrap = document.getElementById('dialTicks');
+  for (let i = 0; i <= 11; i++) {
+    const angle = (i / 11) * MAX_ANGLE;
+    const tick = document.createElement('div');
+    tick.className = 'dial-tick';
+    tick.style.transform = 'rotate(' + angle + 'deg) translateY(-61px)';
+    ticksWrap.appendChild(tick);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'dial-tick-label' + (i === 11 ? ' eleven' : '');
+    lbl.textContent = i;
+    lbl.style.transform = 'rotate(' + angle + 'deg) translateY(-72px) rotate(' + (-angle) + 'deg)';
+    lbl.style.marginLeft = '-4px';
+    lbl.style.marginTop = '-5px';
+    ticksWrap.appendChild(lbl);
+  }
+}
+
+/* Build flame shapes */
+function buildFlames() {
+  const colors = [
+    'radial-gradient(circle at 50% 85%, #ffe680 0%, #ffae00 25%, #ff5a00 55%, rgba(255,0,0,0) 85%)',
+    'radial-gradient(circle at 50% 85%, #ffd060 0%, #ff7a00 35%, #c21400 70%, rgba(255,0,0,0) 90%)',
+    'radial-gradient(circle at 50% 85%, #fff2a8 0%, #ffb020 30%, #ff4000 65%, rgba(200,0,0,0) 90%)',
+    'radial-gradient(circle at 50% 85%, #ffecb3 0%, #ff8800 40%, #b81300 75%, rgba(150,0,0,0) 95%)'
+  ];
+  const count = 9;
+  for (let i = 0; i < count; i++) {
+    const f = document.createElement('div');
+    f.className = 'flame';
+    const w = 25 + Math.random() * 35;
+    const h = 50 + Math.random() * 55;
+    f.style.width = w + 'px';
+    f.style.height = h + 'px';
+    const centerOffset = ((i / (count - 1)) - 0.5) * 80;
+    f.style.left = 'calc(50% - ' + (w/2) + 'px + ' + centerOffset + 'px)';
+    f.style.background = colors[i % colors.length];
+    const dur = 0.5 + Math.random() * 0.6;
+    const delay = Math.random() * 0.8;
+    f.style.animation = 'flicker ' + dur + 's ease-in-out ' + delay + 's infinite alternate';
+    flamesEl.appendChild(f);
+  }
+}
+
+/* =======================================================
+   BINDINGS + INIT
+   ======================================================= */
+document.getElementById('tealBtn').addEventListener('click', () => {
+  makeSomethingTeal();
+  registerButtonPress();
+});
+document.getElementById('studyBtn').addEventListener('click', onStudyClick);
+
+function init() {
+  wrapLetters();
+  // Equalize after fonts load so measurements are accurate
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(equalizeLines);
+  } else {
+    setTimeout(equalizeLines, 200);
+  }
+  window.addEventListener('resize', () => {
+    // Debounced-ish re-equalize
+    clearTimeout(window.__eqT);
+    window.__eqT = setTimeout(equalizeLines, 120);
+  });
+
+  buildDialTicks();
+  buildFlames();
+  updateDialVisual();
+
+  createMp3Buttons();
+
+  // Scramble every 3 seconds
+  setInterval(scrambleOPDP, 3000);
+}
+
+init();
+</script>
+</body>
+</html>
