@@ -147,6 +147,81 @@
     font-style: italic;
   }
 
+  /* ============ STOP BUTTON ============ */
+  .stop-row {
+    text-align: center;
+    margin: 28px auto 24px;
+  }
+  .stop-btn {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.15rem;
+    letter-spacing: 0.25em;
+    color: #c24a4a;
+    padding: 6px 10px;
+    transition: color 0.25s ease, letter-spacing 0.25s ease;
+  }
+  .stop-btn:hover {
+    color: #ff6a6a;
+    letter-spacing: 0.32em;
+  }
+  .stop-btn:active { transform: translateY(1px); }
+
+  /* ============ SOUND BUTTON PLAY/PAUSE ============ */
+  .sound-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sound-icon {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 10px;
+    position: relative;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+  }
+  .sound-btn:hover .sound-icon,
+  .sound-btn.playing .sound-icon {
+    opacity: 1;
+  }
+  /* Play triangle (default) */
+  .sound-icon::before {
+    content: '';
+    position: absolute;
+    left: 1px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 9px solid currentColor;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    background: transparent;
+  }
+  /* Pause bars (when playing) — two vertical marks made with box-shadow */
+  .sound-btn.playing .sound-icon::before {
+    left: 1px;
+    width: 3px;
+    height: 11px;
+    background: currentColor;
+    border: 0;
+    box-shadow: 6px 0 0 currentColor;
+  }
+  /* Elegant gray styling for a playing button */
+  .sound-btn.playing,
+  .sound-btn.playing:hover {
+    background: #2a2a2a;
+    color: #cfc8bd;
+    border-color: #4a4a4a;
+  }
+
   .empty-note {
     color: var(--fg-dim);
     font-style: italic;
@@ -406,6 +481,10 @@
 
 <div class="ornament">* &dagger; &Dagger; &dagger; *</div>
 
+<div class="stop-row">
+  <button id="stopBtn" class="stop-btn" type="button">{STOP}</button>
+</div>
+
 <div class="soundboard">
   <div class="btn-row" id="mp3Buttons"></div>
 
@@ -589,6 +668,22 @@ function filenameToLabel(fn) {
   return fn.replace(/\.mp3$/i, '').replace(/[_\-]+/g, ' ').trim();
 }
 
+/* Tracks every audio element currently playing — used by {STOP} */
+const playingAudios = new Set();
+
+function stopAllSounds() {
+  playingAudios.forEach(audio => {
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+    } catch (e) {}
+  });
+  playingAudios.clear();
+  document.querySelectorAll('.sound-btn.playing').forEach(b => {
+    b.classList.remove('playing');
+  });
+}
+
 async function createMp3Buttons() {
   const container = document.getElementById('mp3Buttons');
   let mp3s = await discoverMp3s();
@@ -609,17 +704,53 @@ async function createMp3Buttons() {
   mp3s.sort((a, b) => a.localeCompare(b));
   mp3s.forEach(fn => {
     const btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.textContent = filenameToLabel(fn);
+    btn.className = 'btn sound-btn';
+
+    const icon = document.createElement('span');
+    icon.className = 'sound-icon';
+    icon.setAttribute('aria-hidden', 'true');
+
+    const label = document.createElement('span');
+    label.className = 'sound-label';
+    label.textContent = filenameToLabel(fn);
+
+    btn.appendChild(icon);
+    btn.appendChild(label);
+
     const audio = new Audio(fn);
     audio.preload = 'none';
+
+    // When a sound finishes on its own, restore the button state.
+    audio.addEventListener('ended', () => {
+      btn.classList.remove('playing');
+      playingAudios.delete(audio);
+    });
+
     btn.addEventListener('click', () => {
-      try {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-      } catch (e) {}
+      if (btn.classList.contains('playing')) {
+        // Toggle off — stop this sound.
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+        } catch (e) {}
+        btn.classList.remove('playing');
+        playingAudios.delete(audio);
+      } else {
+        // Start playing this sound.
+        try {
+          audio.currentTime = 0;
+          audio.play().catch(() => {
+            // Playback failed — do not mark as playing.
+            btn.classList.remove('playing');
+            playingAudios.delete(audio);
+          });
+        } catch (e) {}
+        btn.classList.add('playing');
+        playingAudios.add(audio);
+      }
       registerButtonPress();
     });
+
     container.appendChild(btn);
   });
 }
@@ -1021,6 +1152,10 @@ document.getElementById('supportBtn').addEventListener('click', () => {
 document.getElementById('studyBtn').addEventListener('click', (e) => {
   playDing();
   onStudyClick(e);
+});
+document.getElementById('stopBtn').addEventListener('click', () => {
+  stopAllSounds();
+  registerButtonPress();
 });
 
 function init() {
