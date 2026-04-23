@@ -454,23 +454,69 @@ function scrambleOPDP() {
 
 /* =======================================================
    MP3 BUTTON GENERATION
-   Tries to discover .mp3 files in the current directory by
-   fetching the directory index (works with most local HTTP
-   servers like `python3 -m http.server`). Falls back to a
-   user-editable list if auto-discovery fails.
+   Strategies (tried in order):
+     1. GitHub Contents API — works on GitHub Pages. Auto-detects
+        owner/repo from a *.github.io URL, or you can hardcode them
+        below if you use a custom domain.
+     2. Directory index listing — works with local servers like
+        `python3 -m http.server`.
+     3. FALLBACK_MP3S — manual list, last resort.
    ======================================================= */
 
-// If auto-discovery fails, list your MP3 filenames here:
+// OPTIONAL: hardcode these if you use a custom domain, or leave blank
+// to auto-detect from a username.github.io URL.
+const GITHUB_OWNER = '';   // e.g. 'octocat'
+const GITHUB_REPO  = '';   // e.g. 'opdp-soundboard'
+const GITHUB_BRANCH = '';  // optional: '' = default branch
+
+// If all auto-discovery fails, list your MP3 filenames here:
 const FALLBACK_MP3S = [
   // 'Sad_Crying.mp3',
   // 'Victory_Horn.mp3',
   // 'Corporate_Applause.mp3',
 ];
 
-async function discoverMp3s() {
+function resolveGitHubRepo() {
+  if (GITHUB_OWNER && GITHUB_REPO) {
+    return { owner: GITHUB_OWNER, repo: GITHUB_REPO };
+  }
+  // Auto-detect from *.github.io hostname
+  const host = location.hostname;
+  if (!host.endsWith('.github.io')) return null;
+  const owner = host.split('.')[0];
+  const segments = location.pathname.split('/').filter(Boolean);
+  // User/org pages live at username.github.io/ with repo = username.github.io
+  // Project pages live at username.github.io/reponame/...
+  const firstSeg = segments[0];
+  const looksLikeFile = firstSeg && /\.[a-z0-9]+$/i.test(firstSeg);
+  if (firstSeg && !looksLikeFile) {
+    return { owner, repo: firstSeg };
+  }
+  return { owner, repo: host };
+}
+
+async function discoverMp3sFromGitHub() {
+  const info = resolveGitHubRepo();
+  if (!info) return null;
+  try {
+    let url = `https://api.github.com/repos/${info.owner}/${info.repo}/contents/`;
+    if (GITHUB_BRANCH) url += `?ref=${encodeURIComponent(GITHUB_BRANCH)}`;
+    const resp = await fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } });
+    if (!resp.ok) return null;
+    const items = await resp.json();
+    if (!Array.isArray(items)) return null;
+    return items
+      .filter(it => it.type === 'file' && /\.mp3$/i.test(it.name))
+      .map(it => it.name);
+  } catch (e) {
+    return null;
+  }
+}
+
+async function discoverMp3sFromDirListing() {
   try {
     const resp = await fetch('./', { headers: { 'Accept': 'text/html' } });
-    if (!resp.ok) throw new Error('dir listing not available');
+    if (!resp.ok) return null;
     const html = await resp.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const found = new Set();
@@ -481,8 +527,16 @@ async function discoverMp3s() {
     });
     return Array.from(found);
   } catch (e) {
-    return [];
+    return null;
   }
+}
+
+async function discoverMp3s() {
+  const github = await discoverMp3sFromGitHub();
+  if (github && github.length) return github;
+  const dir = await discoverMp3sFromDirListing();
+  if (dir && dir.length) return dir;
+  return [];
 }
 
 function filenameToLabel(fn) {
@@ -497,10 +551,11 @@ async function createMp3Buttons() {
   if (mp3s.length === 0) {
     container.innerHTML =
       '<div class="empty-note">' +
-      'No <em>.mp3</em> files detected. Serve this page with a local HTTP server ' +
-      '(<code style="font-family:monospace;">python3 -m http.server</code>) ' +
-      'and place MP3s alongside <em>index.html</em>, or add filenames to ' +
-      '<code style="font-family:monospace;">FALLBACK_MP3S</code> in the script.' +
+      'No <em>.mp3</em> files detected. On GitHub Pages, commit MP3s to the ' +
+      'repo root — buttons auto-generate via the GitHub API. If you use a ' +
+      'custom domain, set <code style="font-family:monospace;">GITHUB_OWNER</code> and ' +
+      '<code style="font-family:monospace;">GITHUB_REPO</code> in the script. ' +
+      'Locally, serve with <code style="font-family:monospace;">python3 -m http.server</code>.' +
       '</div>';
     return;
   }
