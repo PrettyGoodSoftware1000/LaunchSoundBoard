@@ -187,6 +187,15 @@
     transition: opacity 0.2s ease;
     flex-shrink: 0;
   }
+  /* Phantom space mirroring .sound-icon so the label is centered. */
+  .sound-spacer {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 10px;
+    flex-shrink: 0;
+    visibility: hidden;
+  }
   .sound-btn:hover .sound-icon,
   .sound-btn.playing .sound-icon {
     opacity: 1;
@@ -367,6 +376,40 @@
       inset 0 -2px 6px rgba(0,0,0,0.6),
       0 0 20px rgba(255, 80, 0, 0.7),
       0 0 40px rgba(255, 40, 0, 0.4);
+  }
+
+  /* ============ ELEMENT SMOKE & FIRE (spreading) ============ */
+  .element-smoke, .element-fire {
+    position: absolute;
+    pointer-events: none;
+    z-index: 9995;
+  }
+  .element-smoke { transition: opacity 0.6s ease; }
+
+  .smoke-puff {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(190,190,190,0.55) 0%,
+      rgba(110,110,110,0.30) 45%,
+      rgba(50,50,50,0) 80%);
+    filter: blur(4px);
+    opacity: 0;
+    animation: smoke-rise 2.3s ease-out infinite;
+    mix-blend-mode: screen;
+  }
+  @keyframes smoke-rise {
+    0%   { transform: translate(0, 0) scale(0.35); opacity: 0; }
+    18%  { opacity: 0.75; }
+    75%  { opacity: 0.45; }
+    100% { transform: translate(var(--drift, 0px), -80px) scale(1.9); opacity: 0; }
+  }
+
+  .on-fire-glow {
+    box-shadow:
+      0 0 16px rgba(255, 100, 20, 0.5),
+      0 0 36px rgba(255, 60, 0, 0.3) !important;
+    transition: box-shadow 0.6s ease;
   }
 
   /* ============ FALLING LETTERS ============ */
@@ -631,7 +674,10 @@ async function discoverMp3sFromGitHub() {
     if (!Array.isArray(items)) return null;
     return items
       .filter(it => it.type === 'file' && /\.mp3$/i.test(it.name))
-      .filter(it => it.name.toLowerCase() !== 'ding.mp3')
+      .filter(it => {
+        const n = it.name.toLowerCase();
+        return n !== 'ding.mp3' && n !== 'fire.mp3';
+      })
       .map(it => it.name);
   } catch (e) {
     return null;
@@ -648,7 +694,10 @@ async function discoverMp3sFromDirListing() {
     doc.querySelectorAll('a[href]').forEach(a => {
       const href = decodeURIComponent(a.getAttribute('href') || '');
       const name = href.split('/').pop().split('?')[0];
-      if (name && /\.mp3$/i.test(name) && name.toLowerCase() !== 'ding.mp3') found.add(name);
+      if (!name || !/\.mp3$/i.test(name)) return;
+      const lower = name.toLowerCase();
+      if (lower === 'ding.mp3' || lower === 'fire.mp3') return;
+      found.add(name);
     });
     return Array.from(found);
   } catch (e) {
@@ -714,8 +763,13 @@ async function createMp3Buttons() {
     label.className = 'sound-label';
     label.textContent = filenameToLabel(fn);
 
+    const spacer = document.createElement('span');
+    spacer.className = 'sound-spacer';
+    spacer.setAttribute('aria-hidden', 'true');
+
     btn.appendChild(icon);
     btn.appendChild(label);
+    btn.appendChild(spacer);
 
     const audio = new Audio(fn);
     audio.preload = 'none';
@@ -951,17 +1005,29 @@ function pointerAngle(e) {
   return deg;
 }
 
+let wasOnFire = false;
+
 function updateDialVisual() {
   dial.style.transform = 'rotate(' + currentAngle + 'deg)';
   const val = Math.round((currentAngle / MAX_ANGLE) * 11);
   const clamped = Math.max(0, Math.min(11, val));
-  if (clamped >= 11) {
+  const nowOnFire = clamped >= 11;
+  if (nowOnFire) {
     flamesEl.classList.add('active');
     dial.classList.add('on-fire');
   } else {
     flamesEl.classList.remove('active');
     dial.classList.remove('on-fire');
   }
+  // Edge transitions for the spread mechanic
+  if (nowOnFire && !wasOnFire) {
+    startFireSpread();
+    playFireSound();
+  } else if (!nowOnFire && wasOnFire) {
+    stopFireSpread();
+    stopFireSound();
+  }
+  wasOnFire = nowOnFire;
   // Vibration: faster the further turned. 0 = still, 11 = frenetic.
   if (clamped === 0) {
     dialShakeEl.classList.add('still');
@@ -1061,6 +1127,208 @@ function playDing() {
 }
 
 /* =======================================================
+   FIRE SOUND + SPREADING FIRE EFFECT
+   When the Sense of Urgency dial hits 11:
+     • fire.mp3 plays (looping)
+     • a slow "spread" timer ignites random elements over
+       time — each starts with 4s of smoke, then flames.
+   When the dial drops below 11: everything extinguishes.
+   ======================================================= */
+const fireAudio = new Audio('fire.mp3');
+fireAudio.preload = 'auto';
+fireAudio.loop = true;
+fireAudio.volume = 0.6;
+
+function playFireSound() {
+  try {
+    fireAudio.currentTime = 0;
+    fireAudio.play().catch(() => {});
+  } catch (e) {}
+}
+function stopFireSound() {
+  try {
+    fireAudio.pause();
+    fireAudio.currentTime = 0;
+  } catch (e) {}
+}
+
+/* Tracks elements currently smoking or on fire */
+const fireTargets = new Map(); // element -> { stage, smokeEl, fireEl, timer }
+let spreadInterval = null;
+
+const FLAME_COLORS = [
+  'radial-gradient(circle at 50% 85%, #ffe680 0%, #ffae00 25%, #ff5a00 55%, rgba(255,0,0,0) 85%)',
+  'radial-gradient(circle at 50% 85%, #ffd060 0%, #ff7a00 35%, #c21400 70%, rgba(255,0,0,0) 90%)',
+  'radial-gradient(circle at 50% 85%, #fff2a8 0%, #ffb020 30%, #ff4000 65%, rgba(200,0,0,0) 90%)',
+  'radial-gradient(circle at 50% 85%, #ffecb3 0%, #ff8800 40%, #b81300 75%, rgba(150,0,0,0) 95%)'
+];
+
+function positionOverlay(overlay, el, opts) {
+  const rect = el.getBoundingClientRect();
+  const topPad = opts.topPad || 0;
+  const extraH = opts.extraH || 0;
+  overlay.style.left = (rect.left + window.scrollX) + 'px';
+  overlay.style.top  = (rect.top  + window.scrollY - topPad) + 'px';
+  overlay.style.width  = Math.max(40, rect.width) + 'px';
+  overlay.style.height = (rect.height + extraH) + 'px';
+}
+
+function createSmokeOverlay(el) {
+  const rect = el.getBoundingClientRect();
+  const w = Math.max(60, rect.width);
+  const div = document.createElement('div');
+  div.className = 'element-smoke';
+  const count = Math.max(4, Math.min(9, Math.round(w / 28)));
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'smoke-puff';
+    const size = 18 + Math.random() * 24;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left = (Math.random() * Math.max(10, w - size)) + 'px';
+    p.style.bottom = '0px';
+    p.style.setProperty('--drift', ((Math.random() - 0.5) * 40) + 'px');
+    p.style.animationDelay = (Math.random() * 2) + 's';
+    p.style.animationDuration = (1.8 + Math.random() * 0.8) + 's';
+    div.appendChild(p);
+  }
+  return div;
+}
+
+function createFireOverlay(el) {
+  const rect = el.getBoundingClientRect();
+  const w = Math.max(40, rect.width);
+  const h = rect.height;
+  const div = document.createElement('div');
+  div.className = 'element-fire';
+  // Scale flame height relative to the element, within reason
+  const baseFlameH = Math.max(36, Math.min(120, h * 0.9 + 30));
+  const count = Math.max(3, Math.min(10, Math.round(w / 50)));
+  for (let i = 0; i < count; i++) {
+    const f = document.createElement('div');
+    f.className = 'flame';
+    const fw = 22 + Math.random() * 32;
+    const fh = baseFlameH + Math.random() * 25;
+    f.style.position = 'absolute';
+    f.style.width = fw + 'px';
+    f.style.height = fh + 'px';
+    // Distribute along the bottom edge of the overlay (top of the element)
+    const spread = count === 1 ? 0.5 : (i / (count - 1));
+    f.style.left = (spread * w - fw / 2) + 'px';
+    f.style.bottom = '0px';
+    f.style.background = FLAME_COLORS[i % FLAME_COLORS.length];
+    const dur = 0.5 + Math.random() * 0.6;
+    const delay = Math.random() * 0.8;
+    f.style.animation = 'flicker ' + dur + 's ease-in-out ' + delay + 's infinite alternate';
+    div.appendChild(f);
+  }
+  return div;
+}
+
+function isIgnitableElement(el) {
+  if (!el || el.nodeType !== 1) return false;
+  const tag = el.tagName;
+  if (['HTML','BODY','HEAD','SCRIPT','STYLE','META','LINK','TITLE','SVG','LINE','PATH','G'].includes(tag)) return false;
+  if (el.closest('script, style, head')) return false;
+  if (el === dial || el.closest('.dial-section')) return false;
+  if (el.closest('.flames, .element-fire, .element-smoke, #supportSvg, .support-box')) return false;
+  if (el.classList.contains('falling')) return false;
+  if (fireTargets.has(el)) return false;
+  const r = el.getBoundingClientRect();
+  if (r.width < 20 || r.height < 10) return false;
+  // Don't ignite the viewport itself
+  if (r.width > window.innerWidth * 0.95 && r.height > window.innerHeight * 0.6) return false;
+  // Require at least partial visibility
+  if (r.bottom < 0 || r.top > window.innerHeight + 200) return false;
+  return true;
+}
+
+function igniteElement(el) {
+  if (!el || fireTargets.has(el)) return;
+  const entry = { el, stage: 'smoke', smokeEl: null, fireEl: null, timer: null };
+  fireTargets.set(el, entry);
+
+  const smoke = createSmokeOverlay(el);
+  positionOverlay(smoke, el, { topPad: 60, extraH: 60 });
+  document.body.appendChild(smoke);
+  entry.smokeEl = smoke;
+
+  entry.timer = setTimeout(() => {
+    // After 4s of smoke, catch fire
+    if (!fireTargets.has(el)) return; // cleaned up already
+    entry.stage = 'fire';
+    // Fade the smoke out (keep it briefly for realism)
+    if (entry.smokeEl) {
+      const oldSmoke = entry.smokeEl;
+      oldSmoke.style.opacity = '0.4';
+      setTimeout(() => { try { oldSmoke.remove(); } catch (e) {} }, 800);
+    }
+    const fire = createFireOverlay(el);
+    positionOverlay(fire, el, { topPad: 30, extraH: 30 });
+    document.body.appendChild(fire);
+    entry.fireEl = fire;
+    entry.smokeEl = null;
+    // Add a subtle glow to the element itself
+    try { el.classList.add('on-fire-glow'); } catch (e) {}
+  }, 4000);
+}
+
+function extinguishAll() {
+  fireTargets.forEach(entry => {
+    if (entry.timer) clearTimeout(entry.timer);
+    if (entry.smokeEl) { try { entry.smokeEl.remove(); } catch (e) {} }
+    if (entry.fireEl)  { try { entry.fireEl.remove();  } catch (e) {} }
+    try { entry.el.classList.remove('on-fire-glow'); } catch (e) {}
+  });
+  fireTargets.clear();
+}
+
+function igniteRandomElement() {
+  // Collect candidate elements across the page
+  const all = document.body.querySelectorAll('*');
+  const candidates = [];
+  for (const el of all) {
+    if (isIgnitableElement(el)) candidates.push(el);
+  }
+  if (candidates.length === 0) return;
+  const el = candidates[Math.floor(Math.random() * candidates.length)];
+  igniteElement(el);
+}
+
+function startFireSpread() {
+  if (spreadInterval) return;
+  // First element ignites quickly, then a paced spread
+  setTimeout(igniteRandomElement, 600);
+  spreadInterval = setInterval(() => {
+    igniteRandomElement();
+  }, 5500);
+}
+
+function stopFireSpread() {
+  if (spreadInterval) {
+    clearInterval(spreadInterval);
+    spreadInterval = null;
+  }
+  extinguishAll();
+}
+
+// Keep overlays glued to their targets as the page changes
+function refreshFirePositions() {
+  fireTargets.forEach(entry => {
+    try {
+      if (entry.stage === 'smoke' && entry.smokeEl) {
+        positionOverlay(entry.smokeEl, entry.el, { topPad: 60, extraH: 60 });
+      }
+      if (entry.stage === 'fire' && entry.fireEl) {
+        positionOverlay(entry.fireEl, entry.el, { topPad: 30, extraH: 30 });
+      }
+    } catch (e) {}
+  });
+  requestAnimationFrame(refreshFirePositions);
+}
+requestAnimationFrame(refreshFirePositions);
+
+/* =======================================================
    NEEDS MORE SUPPORT
    Draws a 2px red line from a red "pXY" tag to a random
    element on the page. Annotations stack with each click.
@@ -1155,6 +1423,7 @@ document.getElementById('studyBtn').addEventListener('click', (e) => {
 });
 document.getElementById('stopBtn').addEventListener('click', () => {
   stopAllSounds();
+  stopFireSound();
   registerButtonPress();
 });
 
